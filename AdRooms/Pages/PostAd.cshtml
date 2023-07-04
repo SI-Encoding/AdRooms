@@ -1,0 +1,122 @@
+﻿@page
+@model PostAdModel
+@inject IHttpContextAccessor httpContextAccessor
+@using Microsoft.AspNetCore.Mvc
+@using Microsoft.AspNetCore.Http
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Data.SqlClient;
+@inject AppDbContext db
+@await Html.PartialAsync("_header")
+@{
+    Layout = null;
+    var context = httpContextAccessor.HttpContext;
+    var email = context.Session.GetString("email");
+    var password = context.Session.GetString("password");
+    var user_id = 0;
+    var username = "";
+    var profileImage = "";
+    var user = db.Users.FirstOrDefault(u => u.Email == email);
+    if (email != null && password != null && user != null)
+    {
+        user_id = user.Id;
+        username = user.Username;
+        var status = user.Status;
+        var code = user.Code;
+        profileImage = user.ProfileImage;
+        }
+    }
+    else
+    {
+        Response.Redirect("login.php");
+    }
+}
+
+<section>
+    <div class="page_banner bg_cover" style="background-image: url(assets/images/page-banner.jpg)">
+        <div class="container">
+            <div class="page_banner_content">
+                <h3 class="title">Post Ad</h3>
+                <ul class="breadcrumb">
+                    <li><a asp-page="Index">Home</a></li>
+                    <li>Post Ad</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="post_ads_page pt-70 pb-120">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="sidebar_profile mt-50">
+                    <div class="profile_user">
+                        <div class="user_author d-flex align-items-center">
+                            <div class="author">
+                                <img src="assets/images/author-1.jpg" alt="">
+                            </div>
+                            <div class="user_content media-body">
+                                <h6 class="author_name">User</h6>
+                                <p>@username</p>
+                            </div>
+                        </div>
+                        <div class="user_list">
+                            <ul>
+                                <li><a class="active" asp-page="Dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                                <li><a asp-page="Profilesettings"><i class="fas fa-cog"></i> Profile Settings</a></li>
+                                <li><a asp-page="FavoriteAds"><i class="fas fa-heart"></i> My Favourites</a></li>
+                                <li><a asp-page="Logout"><i class="fas fa-door-open"></i> Log Out</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="post_form mt-50">
+                    <div class="post_title">
+                        <h5 class="title">Ad Detail</h5>
+                    </div>
+                    <form method="post" enctype="multipart/form-data" asp-page-handler="OnPost">
+                        @Html.AntiForgeryToken()
+                        <div class="single_form">
+                            <input type="hidden" asp-for="Email" placeholder="Email" readonly value="@context.Session.GetString("email")" />
+                            <input type="text" asp-for="Title" placeholder="Title" required />
+                        </div>
+                        <div class="single_form">
+                            <select asp-for="CategoryId">
+                                <option value="none">Select Categories</option>
+                                <option value="1">Bedroom</option>
+                                <option value="2">Garage</option>
+                                <option value="3">Laundry Room</option>
+                                <option value="4">Dining Room</option>
+                                <option value="5">Kitchen</option>
+                                <option value="6">Washroom</option>
+                                <option value="7">Living Room</option>
+                                <option value="8">Recreational Room</option>
+                            </select>
+                        </div>
+                        <div class="single_form">
+                            <input type="number" asp-for="Price" placeholder="Ad Your Price" required />
+                        </div>
+                        <div class="single_form">
+                            <textarea asp-for="Content" placeholder="Ad Post" required></textarea>
+                        </div>
+                        <div class="post_upload_file">
+                            <label for="upload">
+                                <span>Select image to upload</span>
+                                <span></span>
+                                <span class="main-btn">Select Files</span>
+                                <span>Maximum upload file size: 500 KB</span>
+                                <input type="file" asp-for="File" id="upload" />
+                            </label>
+                        </div>
+                        <div class="single_form">
+                            <button class="main-btn" type="submit" name="postad" value="Post Ad">Post Ad</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@await Html.PartialAsync("_Footer")

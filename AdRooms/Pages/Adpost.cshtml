@@ -1,0 +1,342 @@
+﻿@page
+@model AdpostModel
+@inject IHttpContextAccessor httpContextAccessor
+@using Microsoft.AspNetCore.Http
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Data.SqlClient;
+@inject AppDbContext db
+@await Html.PartialAsync("_header")
+@{
+    Layout = null;
+    var context = httpContextAccessor.HttpContext;
+    var email = context.Session.GetString("email");
+    var password = context.Session.GetString("password");
+    var user = db.Users.FirstOrDefault(u => u.Email == email);
+    if (email != null && password != null && user != null)
+    {
+        var user_id = user.Id;
+        ViewBag.User_Id = user_id;
+        var status = user.Status;
+        var code = user.Code;
+        var profileImage = user.ProfileImage;
+    }
+    else
+    {
+        RedirectToLoginPage();
+        return;
+    }
+
+    async Task RedirectToLoginPage()
+    {
+        var httpResponse = httpContextAccessor.HttpContext.Response;
+        httpResponse.Redirect("/Login");
+        await httpResponse.CompleteAsync();
+    }
+}
+
+@{
+    AdRooms.Models.AdListing fetchListings = null;
+    AdRooms.Models.AdImage fetchImages = null;
+    List<AdRooms.Models.Interact> fetchComments = null;
+    AdRooms.Models.Interact fetchRatings = null;
+    
+    var id = 0;
+    if (!string.IsNullOrEmpty(Request.Query["view"]))
+    {
+        id = Convert.ToInt32(Request.Query["view"]);
+        ViewBag.Id = id;
+        fetchListings = db.AdListings.FirstOrDefault(ad => ad.Id == id);
+
+        fetchImages = db.AdImages.FirstOrDefault(image => image.listing_id == id);
+
+        fetchComments = db.Interactions.Where(interaction => interaction.ListingId == id).ToList();
+    }
+    else
+    {
+        fetchListings = db.AdListings.FirstOrDefault();
+    }
+}
+
+<section class="product_details_page pt-70 pb-120">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-9">
+                <div class="product_details mt-50">
+                    <div class="product_image">
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="details-1" role="tabpanel" aria-labelledby="details-1-tab">
+                                <img src="~/uploads/@(fetchImages?.image == "" ? "no-image.png" : fetchImages.image)" alt="product details">
+                                <ul class="sticker">
+                                    @if (fetchListings?.FeaturedOn == 1)
+                                    {
+                                        <li>Featured</li>
+                                        <li>New</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product_details_meta d-sm-flex justify-content-between align-items-end">
+                        <div class="product_price">
+                                <span class="price">$@fetchListings?.Price</span>
+                        </div>
+                        <div class="product_date">
+                            <ul class="meta">
+                                    <li><i class="fa fa-clock-o"></i><a href="#">@fetchListings?.CreatedAt</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="product_details_description">
+                        <div class="product_details_title">
+                            <h5 class="title">Description :</h5>
+                        </div>
+                            <p>@fetchListings?.Content</p>
+                    </div>
+                </div>
+                <div class="product_rating mt-30">
+                    <div class="product_rating_top_bar">
+                        <div class="product_details_title">
+                            @{
+                                int adId = Convert.ToInt32(ViewBag.Id);
+                                var fetchCommentCount = db.AdListings
+                                .Where(a => a.Id == adId)
+                                .Select(a => new
+                                {
+                                    a.Id,
+                                    Comments = a.Interacts.Count()
+                                })
+                                .FirstOrDefault();
+                            }
+                        </div>
+                        <div class="product_rating_star">
+                            }
+                        </div>
+                    </div>
+                    <div class="product_rating_comment">
+    <ul>
+        @foreach (var fetch_comment in fetchComments)
+        {
+            <div class="single_rating_author mt-50">
+                <div class="rating_author d-flex align-items-center">
+                    <div class="author_image">
+                        <img src="assets/images/author-1.jpg" alt="author">
+                    </div>
+                    <div class="author_content media-body">
+                        <h5 class="author_name">@fetch_comment.Name</h5>
+                        <span class="date">@fetch_comment.CreatedAt?.ToString("dd MMMM, yyyy")</span>
+                         @if (fetchRatings?.Rating == 1)
+                        {
+                            <ul class="rating_star">
+                                <li><i class="fa fa-star"></i></li>
+                            </ul>
+                        }
+                        else if (fetchRatings?.Rating == 2)
+                        {
+                            <ul class="rating_star">
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                            </ul>
+                        }
+                        else if (fetchRatings?.Rating == 3)
+                        {
+                            <ul class="rating_star">
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                            </ul>
+                        }
+                        else if (fetchRatings?.Rating == 4)
+                        {
+                            <ul class="rating_star">
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                            </ul>
+                        }
+                        else
+                        {
+                            <ul class="rating_star">
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                                <li><i class="fa fa-star"></i></li>
+                            </ul>
+                        }
+                    </div>
+                </div>
+                <div class="rating_description">
+                    <p>@fetch_comment?.Comments</p>
+                </div>
+            </div>
+        }
+    </ul>
+</div>
+
+<div class="product_rating_form mt-20">
+    <div class="product_details_title">
+        <h5 class="title">Leave Your Review :</h5>
+    </div>
+    <div class="product_rating_form_wrapper d-flex flex-wrap">
+        <div class="product_details_rating_wrapper">
+            <div class="product_details_rating mt-20">
+                <form method="POST" autocomplete="off">
+                    <p><i class="fa fa-star-o"></i> Your Rating</p>
+                    <ul class="rating_radio">
+                        <li>
+                            <input type="radio" checked name="radio" id="radio1" value="5">
+                            <label for="radio1"></label>
+                            <span>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                            </span>
+                        </li>
+                        <li>
+                            <input type="radio" name="radio" id="radio2" value="4">
+                            <label for="radio2"></label>
+                            <span>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                            </span>
+                        </li>
+                        <li>
+                            <input type="radio" name="radio" id="radio3" value="3">
+                            <label for="radio3"></label>
+                            <span>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                            </span>
+                        </li>
+                        <li>
+                            <input type="radio" name="radio" id="radio4" value="2">
+                            <label for="radio4"></label>
+                            <span>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                            </span>
+                        </li>
+                        <li>
+                            <input type="radio" name="radio" id="radio5" value="1">
+                            <label for="radio5"></label>
+                            <span>
+                                <i class="fa fa-star"></i>
+                            </span>
+                        </li>
+                    </ul>
+        <div class="product_details_form">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="single_form">
+                        <input name="listing_id" type="hidden" value="@ViewBag.Id">
+                        <input name="user_id" type="hidden" value="@ViewBag.User_Id">
+                        <input name="name" type="text" placeholder="Enter your name . . .">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="single_form">
+                        <input name="email" type="text" placeholder="Enter your mail address . . .">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="single_form">
+                        <textarea name="comment" placeholder="Type your review . . ."></textarea>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="single_form">
+                        <button type="submit" name="user_comment" class="main-btn">Submit</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+    </form>
+    </div>
+</div>
+</div>
+<div class="related_product mt-45">
+    <div class="section_title">
+        <h3 class="title">Featured Ads</h3>
+    </div>
+    @{
+        // Retrieve featured ads from the database
+        var featuredAds = db.AdListings.Where(ad => ad.FeaturedOn == 1).Take(3).ToList();
+    }
+    <div class="row">
+        @foreach (var row in featuredAds)
+        {
+            var category_id = row.CategoryId;
+            var fetchCategory = db.Categories.FirstOrDefault(category => category.Id == category_id);
+            var listing_id = row.Id;
+            var fetchImage = db.AdImages.FirstOrDefault(image => image.listing_id == listing_id);
+            var image = fetchImage != null && !string.IsNullOrEmpty(fetchImage.image) ? fetchImage.image : "no-image.png";
+
+            <div class="col-md-4">
+                <div class="single_ads_card mt-30">
+                    <div class="ads_card_image">
+                        <img src="uploads/@image" alt="ads">
+                        @if (row.FeaturedOn == 1)
+                        {
+                            <p class="sticker">Featured</p>
+                        }
+                    </div>
+                    <div class="ads_card_content">
+                        <div class="meta d-flex justify-content-between">
+                                <p>@fetchCategory?.Name</p>
+                            <a class="like" href="#"><i class="fas fa-heart"></i></a>
+                        </div>
+                        <h4 class="title"><a href="adpost.php?view=@row.Id">@row.Title</a></h4>
+                        <p><i class="far fa-map"></i>@row.City, @row.Country</p>
+                        <div class="ads_price_date d-flex justify-content-between">
+                            <span class="price">$@row.Price</span>
+                            <span class="date">@row.CreatedAt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="col-lg-3">
+    <div class="product_details_sidebar pt-20">
+        <div class="product_sidebar_owner mt-30">
+            <div class="product_details_title">
+                <h5 class="title">Ad Owner :</h5>
+            </div>
+            <div class="product_owner_wrapper mt-20">
+                <div class="owner_author d-flex align-items-center">
+                    @{
+                        var user_listing_id = ViewBag.User_Id;
+                        var sql_user = "SELECT * FROM users WHERE id = @user_listing_id";
+                        var userListingIdParameter = new SqlParameter("@user_listing_id", user_listing_id);
+                        var fetchUser = db.Users.FromSqlRaw(sql_user, userListingIdParameter).FirstOrDefault();
+                    }
+                    <div class="author_image">
+                        <img src="profile_images/@(fetchUser != null && !string.IsNullOrEmpty(fetchUser.ProfileImage) ? fetchUser.ProfileImage : "no-profile.png")" alt="author">
+                    </div>
+                    <div class="author_content media-body">
+                        <h5 class="author_name">@fetchUser?.FullName</h5>
+                    </div>
+                </div>
+                <div class="owner_address d-flex">
+                    <div class="address_icon">
+                        <i class="far fa-map-marker-alt"></i>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</section>
+@await Html.PartialAsync("_Footer")

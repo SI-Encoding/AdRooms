@@ -1,0 +1,156 @@
+﻿@page
+@model DashboardModel
+@inject IHttpContextAccessor httpContextAccessor
+@using Microsoft.AspNetCore.Http
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext db
+@Html.Partial("_header");
+@{
+    Layout = null;
+    var context = httpContextAccessor.HttpContext;
+    var email = context.Session.GetString("email");
+    var password = context.Session.GetString("password");
+    var user = db.Users.FirstOrDefault(u => u.Email == email);
+    if (email != null && password != null && user != null)
+    {
+        var user_id = user.Id;
+        var status = user.Status;
+        var code = user.Code;
+        var profileImage = user.ProfileImage;
+    }
+    else
+    {
+        RedirectToLoginPage();
+        return;
+    }
+    async Task RedirectToLoginPage()
+    {
+        var httpResponse = httpContextAccessor.HttpContext.Response;
+        httpResponse.Redirect("/Login");
+        await httpResponse.CompleteAsync();
+    }
+}
+
+
+@{
+    var userId = user?.Id;
+    var Status = user?.Status;
+}
+
+<section>
+    <div class="page_banner bg_cover" style="background-image: url(assets/images/page-banner.jpg)">
+        <div class="container">
+            <div class="page_banner_content">
+                <h3 class="title">Dashboard</h3>
+                <ul class="breadcrumb">
+                    <li><a href="index.php">Home</a></li>
+                    <li>Dashboard</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="dashboard_page pt-70 pb-120">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="sidebar_profile mt-50">
+                    <div class="profile_user">
+                        <div class="user_author d-flex align-items-center">
+                            <div class="author"> <img src="~/profile_images/@(user?.ProfileImage)" alt=""> </div>
+                            <div class="user_content media-body">
+                                <h6 class="author_name">User</h6>
+                                <p>@(user?.Username)</p>
+                            </div>
+                        </div>
+                        <div class="user_list">
+                            <ul>
+                                <li><a class="active" asp-page="Dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                                <li><a asp-page="Profilesettings"><i class="fas fa-cog"></i> Profile Settings</a></li>
+                                <li><a asp-page="FavoriteAds"><i class="fas fa-heart"></i> My Favourites</a></li>
+                                <li><a asp-page="/Logout"><i class="fas fa-door-open"></i> Log Out</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                       <div class="col-lg-9">
+                <div class="dashboard_content">
+                    <div class="section_title">
+                        <h3 class="title">Welcome, User</h3>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card_header">
+                                    <h4 class="title">Profile Information</h4>
+                                </div>
+                                <div class="card_body">
+                                    <div class="profile_info">
+                                        <ul>
+                                            <li>
+                                                <div class="info_title">Email:</div>
+                                                <div class="info_details">@email</div>
+                                            </li>
+                                            <li>
+                                                <div class="info_title">User ID:</div>
+                                                <div class="info_details">@userId</div>
+                                            </li>
+                                            <li>
+                                                <div class="info_title">Status:</div>
+                                                <div class="info_details">@Status</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card_header">
+                                    <h4 class="title">Recent Activity</h4>
+                                </div>
+                                <div class="card_body">
+                                    <div class="activity_list">
+                                        <ul>
+                                            <li>
+                                                <div class="activity_icon">
+                                                    <i class="fas fa-pencil-alt"></i>
+                                                </div>
+                                                <div class="activity_info">
+                                                    <h6 class="activity_title">Updated Profile</h6>
+                                                    <span class="activity_time">2 hours ago</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="activity_icon">
+                                                    <i class="fas fa-heart"></i>
+                                                </div>
+                                                <div class="activity_info">
+                                                    <h6 class="activity_title">Added to Favorites</h6>
+                                                    <span class="activity_time">5 hours ago</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="activity_icon">
+                                                    <i class="fas fa-envelope"></i>
+                                                </div>
+                                                <div class="activity_info">
+                                                    <h6 class="activity_title">Received Message</h6>
+                                                    <span class="activity_time">1 day ago</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@Html.Partial("_Footer")             

@@ -1,0 +1,170 @@
+﻿@page
+@model IndexModel
+@using AdRooms.Models
+@using Microsoft.EntityFrameworkCore
+@using System.Diagnostics
+@{
+    ViewData["Title"] = "Home";
+}
+
+@inject AppDbContext db
+
+@{
+    var results = db.AdListings.ToList();
+}
+
+@{
+    var email = HttpContext.Session.GetString("email");
+    var password = HttpContext.Session.GetString("password");
+    var userId = Model.UserId != 0 ? Model.UserId.ToString() : "";
+}
+
+@{
+    var user_id = 0;  
+
+    if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
+    {
+        var fetchInfoUser = db.Users.FirstOrDefault(user => user.Email == email);
+        if (fetchInfoUser != null)
+        {
+            user_id = fetchInfoUser.Id;
+            var name = fetchInfoUser.Username;
+            var fullname = fetchInfoUser.FullName;
+            var phone = fetchInfoUser.Phone;
+            var status = fetchInfoUser.Status;
+            var code = fetchInfoUser.Code;
+        }
+        }
+    }
+}
+
+@{
+    Layout = null;
+}
+
+
+@await Html.PartialAsync("_header")
+<!--====== ADS PART START ======-->
+<section class="ads_area pt-70 pb-120">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="ads_tabs d-sm-flex align-items-end justify-content-between pb-30">
+                    <div class="section_title mt-45">
+                        <h3 class="title">Popular <br> and Featured Ads</h3>
+                    </div>
+                    <div class="tabs_menu mt-50">
+                        <ul class="nav" id="myTab" role="tablist">
+                            <li>
+                                <a class="active" id="popular-tab" data-toggle="tab" href="#popular" role="tab" aria-controls="popular" aria-selected="true">Popular Ads</a>
+                            </li>
+                            <li>
+                                <a id="featured-tab" data-toggle="tab" href="#featured" role="tab" aria-controls="featured" aria-selected="false">Featured Ads</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+     <div class="ads_tabs">
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="popular" role="tabpanel" aria-labelledby="popular-tab">
+            <div class="row">
+                @foreach (var row in results)
+                {
+                    var categoryId = row.CategoryId;
+                    var fetchInfo = db.Categories.FirstOrDefault(category => category.Id == categoryId);
+
+                    var listingId = row.Id;
+                    var fetchImage = db.AdImages.FirstOrDefault(image => image.listing_id == listingId);
+
+                    var fetchFavourite = db.FavouriteAds.FirstOrDefault(f => f.ListingId == listingId && f.UserId == user_id);
+
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="single_ads_card mt-30">
+                            <div class="ads_card_image">
+                                <a href="adpost?view=@row.Id">
+                                    <img src="~/uploads/@(string.IsNullOrEmpty(fetchImage?.image) ? "no-image.png" : fetchImage.image)" alt="ads">
+                                </a>
+                                @if (row.ActiveOn == 1)
+                                {
+                                    if (row.FeaturedOn == 1)
+                                    {
+                                        <p class="sticker">Featured</p>
+                                    }
+                                }
+                            </div>
+                            <div class="ads_card_content">
+                                <div class="meta d-flex justify-content-between">
+                                    <p>@fetchInfo?.Name</p>
+                                    @if (fetchFavourite?.ListingId == row.Id && fetchFavourite?.UserId == Convert.ToInt32(user_id))
+                                    {
+                                        <div id="like@row.Id">
+                                                    <a style="color:red;" class="like" onclick="toggleFavorite('@row.Id', '@user_id', 'like@row.Id')"><i class="fas fa-heart" onclick="toggleFavorite('@row.Id', '@user_id', 'like@row.Id')"></i></a>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div id="like@row.Id">
+                                                    <a class="like" onclick="toggleFavorite('@row.Id', '@user_id', 'like@row.Id')"><i class="fas fa-heart" onclick="toggleFavorite('@row.Id', '@user_id', 'like@row.Id')"></i></a>
+                                        </div>
+                                    }
+                                </div>
+                                <h4 class="title"><a href="adpost?view=@row.Id">@row.Title</a></h4>
+                                <p><i class="far fa-map"></i>@row.City, @row.Country</p>
+                                <div class="ads_price_date d-flex justify-content-between">
+                                    <span class="price">$@row.Price</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+            <div class="tab-pane fade" id="featured" role="tabpanel" aria-labelledby="featured-tab">
+                <div class="row">
+                    @{
+                        var featuredAds = db.AdListings.Where(ad => ad.FeaturedOn == 1).ToList();
+
+                        foreach (var row in featuredAds)
+                        {
+                            var categoryIdFeatured = row.CategoryId;
+                            var fetchInfoFeatured = db.Categories.FirstOrDefault(c => c.Id == categoryIdFeatured);
+
+                            var listingIdFeatured = row.Id;
+                            var fetchImageFeatured = db.AdImages.FirstOrDefault(i => i.listing_id == listingIdFeatured);
+
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="single_ads_card mt-30">
+                                    <div class="ads_card_image">
+                                        <img src="~/uploads/@(string.IsNullOrEmpty(fetchImageFeatured?.image) ? "no-image.png" : fetchImageFeatured.image)" alt="ads">
+                                        @if (row.FeaturedOn == 1)
+                        {
+                                            <p class="sticker">Featured</p>
+                        }
+                                    </div>
+                                    <div class="ads_card_content">
+                                        <div class="meta d-flex justify-content-between">
+                                            <p>@fetchInfoFeatured?.Name</p>
+                                            <a class="like" href="#"><i class="fas fa-heart"></i></a>
+                                        </div>
+                                        <h4 class="title"><a href="adpost?view=@row.Id">@row.Title</a></h4>
+                                        <p><i class="far fa-map"></i>@row.City, @row.Country</p>
+                                        <div class="ads_price_date d-flex justify-content-between">
+                                            <span class="price">$@row.Price</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+    </div>
+</div>
+</div>
+</section>
+
+
+
+@await Html.PartialAsync("_Footer")

@@ -1,0 +1,204 @@
+﻿
+
+@{
+    var email = Context.Session.GetString("email");
+    var password = Context.Session.GetString("password");
+    var admin = Context.Session.GetString("username");
+    var user_id = ViewData["user_id"] as string ?? "";
+}
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext db
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <!--====== Title ======-->
+    <title>Pinterest-mockup</title>
+
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!--====== Favicon Icon ======-->
+    <link rel="shortcut icon" href="~/images/favicon.png" type="image/png">
+
+    <!--====== Nice Select CSS ======-->
+    <link rel="stylesheet" href="~/css/nice-select.css">
+
+    <!--====== Font Awesome CSS ======-->
+    <link rel="stylesheet" href="~/css/all.min.css">
+
+    <link rel="stylesheet" href="~/css/slick.css">
+    <link rel="stylesheet" href="~/css/ion.rangeSlider.min.css">
+    <link rel="stylesheet" href="~/css/fontawesome.min.css">
+
+    <!--====== Bootstrap CSS ======-->
+    <link rel="stylesheet" href="~/css/bootstrap.min.css">
+
+    <!--====== Default CSS ======-->
+    <link rel="stylesheet" href="~/css/default.css">
+
+    <!--====== Style CSS ======-->
+    <link rel="stylesheet" href="~/css/style.css">
+
+</head>
+
+<body class="gray-bg">
+
+    <!--====== PRELOADER PART START ======-->
+
+    <div class="preloader">
+        <div class="loader">
+            <div class="ytp-spinner">
+                <div class="ytp-spinner-container">
+                    <div class="ytp-spinner-rotator">
+                        <div class="ytp-spinner-left">
+                            <div class="ytp-spinner-circle"></div>
+                        </div>
+                        <div class="ytp-spinner-right">
+                            <div class="ytp-spinner-circle"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--====== PRELOADER PART ENDS ======-->
+
+    <!--====== HEADER PART START ======-->
+
+    <header class="header_area">
+
+        <div class="header_navbar">
+            <div class="container">
+                <nav class="navbar navbar-expand-lg">
+                    <a class="navbar-brand" asp-page="Index">
+                        <img src="~/images/logo.png" alt="logo">
+                    </a>
+
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent">
+                        <ul class="navbar-nav m-auto">
+                            @if (admin == "admin")
+                            {
+                                <li>
+                                    <a href="admin/Dashboard.cshtml">Dashboard <span class="line"></span></a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li>
+                                    <a asp-page="Index">Home <span class="line"></span></a>
+                                </li>
+                                <li>
+                                    <a asp-page="Dashboard">Dashboard <span class="line"></span></a>
+                                </li>
+                            }
+                            @{
+                                var sql_noti = $"SELECT * FROM moderate_user WHERE user_id = '{user_id}'";
+                                var run_sql_noti = db.ModerateUsers.FromSqlRaw(sql_noti).FirstOrDefault();
+                                var fetch_noti = run_sql_noti;
+                            }
+                            @if (fetch_noti != null && fetch_noti.Reason != "")
+                            {
+                                <li>
+                                    <a data-toggle="modal" data-target="#idnoti">Notification <i style="color:red;" class="fas fa-bell"></i><span class="line"></span></a>
+                                </li>
+                            }
+
+                        </ul>
+                    </div>
+
+                    @if (admin == "admin")
+                    {
+                        <div class="navbar_btn">
+                            <ul>
+                                <li>
+                                    <div class="dropdown">
+                                        <a href="#" class="dropdown-toggle" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">My Account</a>
+
+                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                            <ul>
+                                                <li><a href="admin/Dashboard.cshtml"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                                                <li><a href="admin/Logout.cshtml"><i class="fas fa-door-open"></i> Log Out</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li><a class="sign-up" href="admin/Logout.cshtml">Log Out</a></li>
+                            </ul>
+                        </div>
+                    }
+                    else if (email != null && password != null)
+                    {
+                        <div class="navbar_btn">
+                            <ul>
+                                <li>
+                                    <div class="dropdown">
+                                        <a href="#" class="dropdown-toggle" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">My Account</a>
+
+                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                            <ul>
+                                                <li><a asp-page="Dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                                                <li><a asp-page="Profilesettings"><i class="fas fa-cog"></i> Profile Settings</a></li>
+                                                <li><a asp-page="FavoriteAds"><i class="fas fa-heart"></i> My Favourites</a></li>
+                                                <li><a asp-page="/Logout"><i class="fas fa-door-open"></i> Log Out</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li><a class="sign-up" asp-page="PostAd">Post Ads</a></li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="navbar_btn">
+                            <ul>
+                                <li><a asp-page="Login">Login<span class="line"></span></a></li>
+                                <li><a class="sign-up" asp-page="Register">Sign Up</a></li>
+                            </ul>
+                        </div>
+                    }
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Modal -->
+    <div class="modal fade" id="idnoti" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalCenterTitle">You Are Banned</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="col-lg">
+                        <div class="post_form">
+                            <div class="post_title">
+                                @if (fetch_noti != null)
+                                {
+                                    <h5 class="title">@fetch_noti.Reason</h5>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
